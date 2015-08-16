@@ -73,3 +73,5 @@ Here is median of the total number of steps taken per day for new dataset
 ```
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+
