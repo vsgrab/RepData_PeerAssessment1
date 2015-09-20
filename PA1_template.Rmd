@@ -1,8 +1,9 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
+title: 'Reproducible Research: Peer Assessment 1'
+output:
   html_document:
-    keep_md: true
+    keep_md: yes
+  pdf_document: default
 ---
 ```{r, echo=FALSE}
 if (!require(ggplot2)) {
@@ -11,6 +12,10 @@ if (!require(ggplot2)) {
 
 if (!require(scales)) {
       install.packages("scales")
+}
+
+if (!require(gridExtra)) {
+      install.packages("gridExtra")
 }
 
 ```
@@ -24,35 +29,35 @@ summary(steps)
 ```
 
 ## What is mean total number of steps taken per day?
-```{r, echo=FALSE}
+```{r, echo=TRUE}
 mean_steps<-aggregate(steps$steps,by=list(steps$date),sum )
 ```
 Here is mean of the total number of steps taken per day
-```{r, echo=FALSE}
+```{r, echo=TRUE}
 mean(mean_steps$x,na.rm = TRUE)
 ```
 Here is median of the total number of steps taken per day
-```{r, echo=FALSE}
+```{r, echo=TRUE}
 median(mean_steps$x,na.rm = TRUE)
 ```
 
 ## What is the average daily activity pattern?
-```{r, echo=FALSE}
+```{r, echo=TRUE}
 mean_steps_intvl<-aggregate(steps$steps,by=list(interval=steps$interval),mean, na.rm=TRUE )
 gr<-qplot(mean_steps_intvl[,1],mean_steps_intvl$x,geom="line",
           ylab = "Steps By Day Interval", xlab="") 
-gr<-gr + scale_x_continuous(breaks = seq(0,2400,100)) + theme_classic()
+gr<-gr + scale_x_continuous(breaks = seq(0,2400,100)) + theme(axis.text.x = element_text(angle = 90, hjust = 1))
 print(gr)
 ```
 
 
 ## Imputing missing values
 Number of rows with NA's
-```{r, echo=FALSE}
+```{r, echo=TRUE}
 nrow(steps[is.na(steps$step), ])
 ```
 
-```{r, echo=FALSE}
+```{r, echo=TRUE}
 steps2<-steps
 
 steps2[is.na(steps2$step), 1]<-merge(steps2[is.na(steps2$step), ], mean_steps_intvl, by="interval")$x
@@ -60,15 +65,41 @@ sum_steps<-aggregate(steps2$steps,by=list(date=steps2$date),sum )
 
 barplot(sum_steps$x, names.arg = sum_steps$date, xlab = "date", ylab = "steps")
 ```
+
 Here is mean of the total number of steps taken per day for new dataset
-```{r, echo=FALSE}
+```{r, echo=TRUE}
 mean(sum_steps$x,na.rm = TRUE)
 ```
+
 Here is median of the total number of steps taken per day for new dataset
-```{r, echo=FALSE}
+```{r, echo=TRUE}
 median(sum_steps$x,na.rm = TRUE)
 ```
 
 ## Are there differences in activity patterns between weekdays and weekends?
+```{r, echo=TRUE}
+steps2$wd<-weekdays(as.Date(steps2$date),TRUE)
+##I have russian language locale here, so all constants below are russsian saturday& sunday
+steps2.weekend<-steps2[steps2$wd=='Тё'| steps2$wd=='бс',]
+steps2.weekday<-steps2[steps2$wd!='Тё'& steps2$wd!='бс',]
+
+steps2.weekday.mean<-aggregate(steps2.weekday$steps,by=list(interval=steps2.weekday$interval),mean, na.rm=TRUE )
+gr.weekday<-qplot(steps2.weekday.mean[,1],steps2.weekday.mean$x,geom="line",
+          main = "Weekdays", xlab="", ylab="") 
+gr.weekday<-gr.weekday + scale_x_continuous(breaks = seq(0,2400,100)) + theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 
+steps2.weekend.mean<-aggregate(steps2.weekend$steps,by=list(interval=steps2.weekend$interval),mean, na.rm=TRUE )
+gr.weekend<-qplot(steps2.weekend.mean[,1],steps2.weekend.mean$x,geom="line",
+          main = "Weekends", xlab="", ylab="") 
+gr.weekend<-gr.weekend + scale_x_continuous(breaks = seq(0,2400,100)) + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+
+grid.arrange(gr.weekday, gr.weekend, nrow=2)
+
+```
+
+
+```{r, echo=FALSE,  results='hide' }
+dev.off()
+```
